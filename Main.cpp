@@ -9,7 +9,7 @@ int main() {
 	for (auto& id : clientIDs) {
 		myCurl.AddClientId(id);
 	}
-	//myCurl.SendEmail(content);
+	myCurl.SendEmail(content);
 	while (true) {
 		myCurl.ReadEmail();
 	}

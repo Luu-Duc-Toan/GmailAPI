@@ -7,7 +7,11 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((string*)userp)->append((char*)contents, size * nmemb);
 	return size * nmemb;
 }
-
+void ExtractEmailBody(string& buffer) {
+	size_t bodyStart = buffer.find("\r\n\r\n");
+	size_t bodyEnd = buffer.find("\r\n\r\n", bodyStart + 4);
+	buffer = buffer.substr(bodyStart + 4, bodyEnd - bodyStart);
+}
 void MyCurl::SetID(string& id) {
 	this->id = id;
 }
@@ -107,11 +111,10 @@ void MyCurl::ReadEmail() {
 	CleanSession(receiver, receiveBuffer);
 	//Read
 	for (int UID : UIDs) {
-		string emailURL = imapsURL + ";UID=" + to_string(UID);
+		string emailURL = imapsURL + ";UID=" + to_string(UID) + "/;SECTION=TEXT";
 		InitReceiverSession(emailURL);
 		res = curl_easy_perform(receiver);
-		/*size_t bodyStart = receiveBuffer.find("\r\n\r\n");
-		receiveBuffer = receiveBuffer.substr(bodyStart + 4);*/
+		ExtractEmailBody(receiveBuffer);
 		//***********************************************************************************
 		//Do something with the email body
 		cout << "Email Body " << UID << ": " << receiveBuffer << endl;
@@ -120,7 +123,7 @@ void MyCurl::ReadEmail() {
 	UIDs.clear();
 }
 void MyCurl::UpdateSearchQuery() {
-	searchQuery = "SEARCH UNSEEN";
+	searchQuery = "UID SEARCH UNSEEN";
 	int n = clientIDs.size();
 	if (n == 0) return;
 	for (int i = 1; i < n; i++) searchQuery += " (OR";
@@ -148,7 +151,7 @@ MyCurl::MyCurl() {
 	UpdateSearchQuery();
 }
 MyCurl::~MyCurl() {
-	if (!recipients) curl_slist_free_all(recipients);
-	if (!sender) curl_easy_cleanup(sender);
-	if (!receiver) curl_easy_cleanup(receiver);
+	if (recipients) curl_slist_free_all(recipients);
+	if (sender) curl_easy_cleanup(sender);
+	if (receiver) curl_easy_cleanup(receiver);
 }

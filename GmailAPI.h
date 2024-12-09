@@ -28,7 +28,7 @@ static size_t payload_source(void* ptr, size_t size, size_t nmemb, void* userp) 
 	return 0;
 }
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp);
-
+void ExtractEmailBody(string& buffer);
 struct MyCurl {
 	CURLcode res = CURLE_OK;
 	//Sender
